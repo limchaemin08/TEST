@@ -1,0 +1,1361 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>패러데이 전자기 유도 법칙 실시간 가상 실험실</title>
+  
+  <!-- Tailwind CSS Play CDN -->
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script>
+    tailwind.config = {
+      darkMode: 'class',
+      theme: {
+        extend: {
+          fontFamily: {
+            sans: ['Inter', 'system-ui', '-apple-system', 'sans-serif'],
+            mono: ['JetBrains Mono', 'Fira Code', 'monospace'],
+          }
+        }
+      }
+    }
+  </script>
+
+  <!-- Google Fonts -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+
+  <style>
+    body {
+      font-family: 'Inter', system-ui, -apple-system, sans-serif;
+    }
+    .font-mono {
+      font-family: 'JetBrains Mono', 'Fira Code', monospace;
+    }
+    ::-webkit-scrollbar {
+      width: 6px;
+      height: 6px;
+    }
+    ::-webkit-scrollbar-track {
+      background: transparent;
+    }
+    .dark ::-webkit-scrollbar-thumb {
+      background: #334155;
+      border-radius: 9999px;
+    }
+    ::-webkit-scrollbar-thumb {
+      background: #cbd5e1;
+      border-radius: 9999px;
+    }
+  </style>
+
+  <!-- React & ReactDOM & Babel CDN -->
+  <script src="https://unpkg.com/react@18/umd/react.production.min.js" crossorigin></script>
+  <script src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js" crossorigin></script>
+  <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
+</head>
+<body class="transition-colors duration-300">
+  <div id="root"></div>
+
+  <!-- React Application -->
+  <script type="text/babel">
+    const { useState, useEffect, useRef, useMemo, useCallback } = React;
+
+    // --- SVG ICONS ---
+    const IconZap = () => (
+      <svg className="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+        <polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2" />
+      </svg>
+    );
+
+    const IconRotateCcw = () => (
+      <svg className="w-3.5 h-3.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+        <path d="M3 12a9 9 0 1 0 9-9 9.75 9.75 0 0 0-6.74 2.74L3 8" />
+        <polyline points="3 3 3 8 8 8" />
+      </svg>
+    );
+
+    const IconBookOpen = () => (
+      <svg className="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+        <path d="M2 3h6a4 4 0 0 1 4 4v14a3 3 0 0 0-3-3H2z" />
+        <path d="M22 3h-6a4 4 0 0 0-4 4v14a3 3 0 0 1 3-3h7z" />
+      </svg>
+    );
+
+    const IconHelpCircle = () => (
+      <svg className="w-3.5 h-3.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+        <circle cx="12" cy="12" r="10" />
+        <path d="M9.09 9a3 3 0 0 1 5.83 1c0 2-3 3-3 3" />
+        <line x1="12" y1="17" x2="12.01" y2="17" />
+      </svg>
+    );
+
+    const IconSun = () => (
+      <svg className="w-4 h-4 text-amber-400 animate-spin-slow" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+        <circle cx="12" cy="12" r="5" />
+        <line x1="12" y1="1" x2="12" y2="3" /><line x1="12" y1="21" x2="12" y2="23" />
+        <line x1="4.22" y1="4.22" x2="5.64" y2="5.64" /><line x1="18.36" y1="18.36" x2="19.78" y2="19.78" />
+        <line x1="1" y1="12" x2="3" y2="12" /><line x1="21" y1="12" x2="23" y2="12" />
+        <line x1="4.22" y1="19.78" x2="5.64" y2="18.36" /><line x1="18.36" y1="5.64" x2="19.78" y2="4.22" />
+      </svg>
+    );
+
+    const IconMoon = () => (
+      <svg className="w-4 h-4 text-indigo-400" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+        <path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z" />
+      </svg>
+    );
+
+    const IconCheckCircle = () => (
+      <svg className="w-4 h-4 text-emerald-500" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+        <path d="M22 11.08V12a10 10 0 1 1-5.93-9.14" />
+        <polyline points="22 4 12 14.01 9 11.01" />
+      </svg>
+    );
+
+    const IconTrophy = () => (
+      <svg className="w-4 h-4 text-amber-500" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+        <path d="M6 9H4.5a2.5 2.5 0 0 1 0-5H6" />
+        <path d="M18 9h1.5a2.5 2.5 0 0 0 0-5H18" />
+        <path d="M4 22h16" />
+        <path d="M10 14.66V17c0 .55-.45 1-1 1H4v2h16v-2h-5c-.55 0-1-.45-1-1v-2.34" />
+        <path d="M12 2a7 7 0 0 0-7 7c0 2.52 2 4.68 4.5 4.96A7 7 0 0 0 12 2z" />
+      </svg>
+    );
+
+    const IconAward = () => (
+      <svg className="w-4 h-4 text-indigo-500" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+        <circle cx="12" cy="8" r="7" />
+        <polyline points="8.21 13.89 7 23 12 20 17 23 15.79 13.88" />
+      </svg>
+    );
+
+    // --- THEORY DATA ---
+    const REFLECTIVE_QUESTIONS = [
+      {
+        id: 'static',
+        question: '자석을 코일 안에 넣고 가만히 멈춰두면 왜 전류가 흐르지 않을까요?',
+        concept: '자기장의 세기 vs 자기장의 변화율',
+        hint: '패러데이 법칙에 따르면 유도기전력은 자기장 자체의 세기가 아니라, 자기장의 시간당 "변화량"에 비례합니다. 자석이 멈춰 있으면 코일을 통과하는 자속의 변화가 0이므로 유도기전력과 유도전류도 0이 됩니다.'
+      },
+      {
+        id: 'speed',
+        question: '자석을 빠르게 넣고 뺄 때와 천천히 넣고 뺄 때의 차이는 무엇인가요?',
+        concept: '속도와 유도기전력의 관계',
+        hint: '자석을 빠르게 움직일수록 코일을 통과하는 자속의 변화 속도(dΦ/dt)가 커집니다. 따라서 유도기전력의 크기(그래프의 진폭)가 훨씬 더 크게 나타나며 검류계 바늘도 더 크게 흔들립니다.'
+      },
+      {
+        id: 'direction',
+        question: '자석의 N극을 넣을 때와 뺄 때 검류계 바늘의 방향은 어떻게 되나요? S극일 때는 어떤가요?',
+        concept: '렌츠의 법칙 (방해의 법칙)',
+        hint: '렌츠의 법칙에 의해 코일은 외부 자기장의 변화를 방해하는 방향으로 유도 자기장을 만듭니다.\n- N극이 접근하면: 청력(밀어내기)을 유도하기 위해 코일 입구에 N극이 생기는 방향으로 전류가 흐릅니다.\n- N극이 후퇴하면: 인력(잡아당기기)을 유도하기 위해 코일 입구에 S극이 생기는 방향으로 전류가 흐릅니다.\nS극은 이와 정확히 반대 방향으로 작동합니다.'
+      },
+      {
+        id: 'turns',
+        question: '코일 감은 수(N)를 늘리면 유도전류의 세기는 어떻게 변하나요?',
+        concept: '패러데이 법칙 (감은 수 N)',
+        hint: '유도기전력은 코일 감은 수(N)에 비례합니다(V = -N * dΦ/dt). 따라서 동일한 속도로 자석을 움직이더라도 코일을 더 많이 감을수록 유도기전력과 유도전류의 크기가 커집니다.'
+      },
+      {
+        id: 'angle',
+        question: '자석과 코일 중심축 사이의 각도(θ)를 조절하면 유도전류에 어떤 영향을 주나요?',
+        concept: '코일을 통과하는 자속 (Φ = B * A * cosθ)',
+        hint: '코일 면을 수직으로 통과하는 자속은 cos(θ)에 비례합니다. 각도 θ가 0도일 때 cos(0) = 1로 자속이 최대가 되며, 각도가 90도에 가까워질수록 cos(θ)가 0에 수렴하여 자속 변화가 거의 없어집니다. 즉, 각도가 틀어질수록 유도전류가 약해집니다.'
+      },
+      {
+        id: 'strength',
+        question: '자석의 세기(약함, 보통, 강함)를 바꾸면 유도기전력에 어떤 변화가 생기나요?',
+        concept: '자기장 세기(B)와 유도전류',
+        hint: '더 강력한 자석(예: 네오디뮴)일수록 자석 주변의 자기장 세기 B가 강해져, 자석이 동일한 속도로 움직여도 코일을 통과하는 자속의 변화율(dΦ/dt)이 훨씬 더 커집니다. 따라서 검류계 바늘과 그래프의 전압 진폭이 급격하게 증가합니다.'
+      },
+      {
+        id: 'offset',
+        question: '진입 높이(Y-Offset)를 조절하여 자석이 코일 중심을 비껴가게 만들면 유도전류는 어떻게 변하나요?',
+        concept: '거리 및 중심축 이탈 효과',
+        hint: '자석이 코일의 중심축에서 위나 아래로 크게 벗어날수록(Y-Offset 증가), 코일 도선을 통과하는 자기력선의 밀도와 각도가 틀어져 실질적인 자속 변화량이 급감하게 됩니다. 중심축을 정확히 관통할 때 가장 강력한 유도 전류가 발생합니다.'
+      }
+    ];
+
+    // --- PHYSICS CANVAS ---
+    function PhysicsCanvas({ state, setState, onUpdateEmf, theme = 'light' }) {
+      const canvasRef = useRef(null);
+      const containerRef = useRef(null);
+
+      // Dragging state
+      const isDraggingRef = useRef(false);
+      const dragStartOffsetRef = useRef(0);
+      const prevXRef = useRef(0);
+      const velocitySmoothRef = useRef(0);
+
+      // Time tracker for animations (e.g. magnetic field lines flow)
+      const animTimeRef = useRef(0);
+      const autoOscillateTimeRef = useRef(0);
+
+      // Dimensions
+      const canvasWidth = 760;
+      const canvasHeight = 170;
+      const coilCenterX = 480;
+      const coilCenterY = 85;
+      const magnetLength = 130;
+      const magnetHeight = 44;
+
+      // Ref to hold the latest simulation state
+      const stateRef = useRef(state);
+      useEffect(() => {
+        stateRef.current = state;
+      }, [state]);
+
+      // React state for hover effect cursor
+      const [isHoveringMagnet, setIsHoveringMagnet] = useState(false);
+
+      // Check if coordinates hit the magnet (taking rotation into account slightly)
+      const isHitMagnet = (x, y) => {
+        const halfL = magnetLength / 2;
+        const halfH = magnetHeight / 2;
+        
+        const dx = x - state.magnetX;
+        const dy = y - state.magnetY;
+        
+        const rad = (state.angle * Math.PI) / 180;
+        const rx = dx * Math.cos(-rad) - dy * Math.sin(-rad);
+        const ry = dx * Math.sin(-rad) + dy * Math.cos(-rad);
+
+        return Math.abs(rx) <= halfL && Math.abs(ry) <= halfH;
+      };
+
+      // Convert client coords to canvas local coordinates with scaling
+      const getCanvasCoords = (e) => {
+        const canvas = canvasRef.current;
+        if (!canvas) return { x: 0, y: 0 };
+        
+        const rect = canvas.getBoundingClientRect();
+        
+        let clientX = 0;
+        let clientY = 0;
+        
+        if (e.touches && e.touches.length > 0) {
+          clientX = e.touches[0].clientX;
+          clientY = e.touches[0].clientY;
+        } else {
+          clientX = e.clientX;
+          clientY = e.clientY;
+        }
+
+        const scaleX = canvasWidth / rect.width;
+        const scaleY = canvasHeight / rect.height;
+        return {
+          x: (clientX - rect.left) * scaleX,
+          y: (clientY - rect.top) * scaleY
+        };
+      };
+
+      // Drag start
+      const handleStart = (e) => {
+        if (state.isAutoMoving) return; // Ignore input in auto-oscillation
+        
+        const coords = getCanvasCoords(e);
+        if (isHitMagnet(coords.x, coords.y)) {
+          isDraggingRef.current = true;
+          dragStartOffsetRef.current = coords.x - state.magnetX;
+          prevXRef.current = coords.x;
+          velocitySmoothRef.current = 0;
+          
+          setState(prev => ({ ...prev, isDragging: true }));
+          
+          // Prevent scrolling on mobile
+          if (e.cancelable) {
+            e.preventDefault();
+          }
+        }
+      };
+
+      // Drag move
+      const handleMove = (e) => {
+        const coords = getCanvasCoords(e);
+        
+        // Update hovering status for cursor style
+        if (!state.isAutoMoving && !isDraggingRef.current) {
+          setIsHoveringMagnet(isHitMagnet(coords.x, coords.y));
+        }
+
+        if (isDraggingRef.current) {
+          let targetX = coords.x - dragStartOffsetRef.current;
+          targetX = Math.max(90, Math.min(670, targetX)); // Limit horizontal movement
+
+          const instantVelocity = coords.x - prevXRef.current;
+          prevXRef.current = coords.x;
+
+          velocitySmoothRef.current = velocitySmoothRef.current * 0.82 + instantVelocity * 0.18;
+
+          // Real-time calculation of Y-coordinate based on offset and trajectory angle (tan θ)
+          const rad = (stateRef.current.angle * Math.PI) / 180;
+          const targetY = coilCenterY + stateRef.current.yOffset + (targetX - coilCenterX) * Math.tan(rad);
+
+          setState(prev => ({
+            ...prev,
+            magnetX: targetX,
+            magnetY: targetY,
+            velocity: velocitySmoothRef.current
+          }));
+
+          if (e.cancelable) {
+            e.preventDefault();
+          }
+        }
+      };
+
+      // Drag end
+      const handleEnd = () => {
+        if (isDraggingRef.current) {
+          isDraggingRef.current = false;
+          setState(prev => ({
+            ...prev,
+            isDragging: false,
+            velocity: 0
+          }));
+          velocitySmoothRef.current = 0;
+        }
+      };
+
+      // Animation frame loop
+      useEffect(() => {
+        let animId;
+
+        const render = () => {
+          const canvas = canvasRef.current;
+          if (!canvas) return;
+          const ctx = canvas.getContext('2d');
+          if (!ctx) return;
+
+          const s = stateRef.current;
+
+          // Handle High DPI and logical canvas scaling
+          const dpr = window.devicePixelRatio || 1;
+          const rect = canvas.getBoundingClientRect();
+          if (canvas.width !== rect.width * dpr || canvas.height !== rect.height * dpr) {
+            canvas.width = rect.width * dpr;
+            canvas.height = rect.height * dpr;
+          }
+          ctx.setTransform(1, 0, 0, 1, 0, 0); // Reset transform
+          ctx.scale(dpr * (rect.width / canvasWidth), dpr * (rect.height / canvasHeight));
+
+          // Clear
+          ctx.fillStyle = theme === 'dark' ? '#0f172a' : '#f8fafc'; // grid background
+          ctx.fillRect(0, 0, canvasWidth, canvasHeight);
+
+          // Draw horizontal reference guide line / bench rail
+          ctx.strokeStyle = theme === 'dark' ? '#1e293b' : '#e2e8f0';
+          ctx.lineWidth = 4;
+          ctx.lineCap = 'round';
+          ctx.beginPath();
+          ctx.moveTo(60, coilCenterY + 35);
+          ctx.lineTo(700, coilCenterY + 35);
+          ctx.stroke();
+
+          // Rail support feet
+          ctx.fillStyle = theme === 'dark' ? '#334155' : '#94a3b8';
+          ctx.fillRect(80, coilCenterY + 35, 12, 10);
+          ctx.fillRect(668, coilCenterY + 35, 12, 10);
+
+          // Auto oscillation updates
+          let currentX = s.magnetX;
+          let currentVel = s.velocity;
+
+          if (s.isAutoMoving) {
+            autoOscillateTimeRef.current += 0.022; // time speed
+            
+            const center = 340;
+            const amplitude = 170;
+            
+            const newX = center + amplitude * Math.sin(autoOscillateTimeRef.current);
+            const analyticalVel = amplitude * Math.cos(autoOscillateTimeRef.current) * 0.022 * 60; // scale to frames
+            
+            const rad = (s.angle * Math.PI) / 180;
+            const newY = coilCenterY + s.yOffset + (newX - coilCenterX) * Math.tan(rad);
+
+            currentX = newX;
+            currentVel = analyticalVel;
+
+            // Sync with parent state periodically
+            setState(prev => {
+              if (prev.isAutoMoving) {
+                return {
+                  ...prev,
+                  magnetX: newX,
+                  magnetY: newY,
+                  velocity: analyticalVel
+                };
+              }
+              return prev;
+            });
+          } else if (!isDraggingRef.current) {
+            // Apply friction to velocity
+            currentVel = currentVel * 0.82;
+            if (Math.abs(currentVel) < 0.01) currentVel = 0;
+            
+            if (currentVel !== s.velocity) {
+              setState(prev => {
+                if (!prev.isDragging && !prev.isAutoMoving) {
+                  return { ...prev, velocity: currentVel };
+                }
+                return prev;
+              });
+            }
+          }
+
+          // Physics Math: Calculate Instantaneous EMF
+          const u = currentX - coilCenterX;
+          const R = 44; // coil radius
+          const L = magnetLength - 20; // effective magnetic dipole length
+          
+          const x1 = u + L / 2;
+          const x2 = u - L / 2;
+          
+          // Compute actual vertical offset d based on offset and entry angle
+          const rad = (s.angle * Math.PI) / 180;
+          const d = s.yOffset + (currentX - coilCenterX) * Math.tan(rad);
+
+          const C = 135; // Calibration scaling factor
+          // Distance from coil wire scales as R^2 + d^2
+          const term1 = 1 / Math.pow(x1 * x1 + R * R + d * d, 1.5);
+          const term2 = 1 / Math.pow(x2 * x2 + R * R + d * d, 1.5);
+          
+          let dPhi_du = C * R * R * (term1 - term2);
+          
+          // Apply magnet strength level (1: 0.5x, 2: 1.0x, 3: 2.0x)
+          const strengthScale = s.magnetStrength === 1 ? 0.5 : s.magnetStrength === 3 ? 2.0 : 1.0;
+          dPhi_du *= strengthScale;
+
+          if (s.polarity === 'SN') {
+            dPhi_du = -dPhi_du;
+          }
+          
+          // Scale by cos(angle) for cross-sectional area reduction
+          const cosAngle = Math.cos(rad);
+          dPhi_du *= cosAngle;
+          
+          let calculatedEmf = -s.turns * dPhi_du * currentVel * 0.25;
+
+          if (s.windingDirection === 'CCW') {
+            calculatedEmf = -calculatedEmf;
+          }
+
+          onUpdateEmf(calculatedEmf);
+
+          animTimeRef.current += 0.25;
+
+          // 1. Draw BACK half of the coil wire loops
+          const loopCount = s.turns;
+          const loopSpacing = 16;
+          const startX = coilCenterX - ((loopCount - 1) * loopSpacing) / 2;
+
+          ctx.lineWidth = 3.5;
+          ctx.lineCap = 'round';
+
+          for (let k = 0; k < loopCount; k++) {
+            const cx = startX + k * loopSpacing;
+            ctx.strokeStyle = '#b45309'; // Copper wire color back (darker)
+            ctx.beginPath();
+            ctx.ellipse(cx, coilCenterY, 20, 50, 0, Math.PI / 2, (3 * Math.PI) / 2);
+            ctx.stroke();
+
+            if (Math.abs(calculatedEmf) > 0.05) {
+              const glowIntensity = Math.min(0.8, Math.abs(calculatedEmf) / 5.5);
+              ctx.strokeStyle = calculatedEmf > 0 ? `rgba(6, 182, 212, ${glowIntensity})` : `rgba(245, 158, 11, ${glowIntensity})`;
+              ctx.lineWidth = 7;
+              ctx.beginPath();
+              ctx.ellipse(cx, coilCenterY, 20, 50, 0, Math.PI / 2, (3 * Math.PI) / 2);
+              ctx.stroke();
+              ctx.lineWidth = 3.5; // restore
+            }
+          }
+
+          // 2. Draw Magnet and its Magnetic Field Lines
+          ctx.save();
+          ctx.translate(currentX, s.magnetY);
+          ctx.rotate(rad);
+
+          // Magnetic field lines (Dipole loops)
+          const lineCount = 5;
+          ctx.lineWidth = 1.2;
+          
+          for (let i = 1; i <= lineCount; i++) {
+            const extentY = i * 22;
+            const extentX = i * 35 + 15;
+            
+            ctx.strokeStyle = theme === 'dark' ? 'rgba(148, 163, 184, 0.45)' : 'rgba(100, 116, 139, 0.28)';
+            
+            const flowDirection = s.polarity === 'NS' ? -1 : 1;
+            ctx.setLineDash([6, 10]);
+            ctx.lineDashOffset = animTimeRef.current * flowDirection * 1.6;
+
+            // Top loop
+            ctx.beginPath();
+            ctx.moveTo(magnetLength / 2 - 10, 0);
+            ctx.bezierCurveTo(
+              magnetLength / 2 + extentX, -extentY,
+              -magnetLength / 2 - extentX, -extentY,
+              -magnetLength / 2 + 10, 0
+            );
+            ctx.stroke();
+
+            // Bottom loop
+            ctx.beginPath();
+            ctx.moveTo(magnetLength / 2 - 10, 0);
+            ctx.bezierCurveTo(
+              magnetLength / 2 + extentX, extentY,
+              -magnetLength / 2 - extentX, extentY,
+              -magnetLength / 2 + 10, 0
+            );
+            ctx.stroke();
+          }
+          ctx.setLineDash([]);
+
+          // Straight horizontal field line passing through the core
+          ctx.strokeStyle = theme === 'dark' ? 'rgba(148, 163, 184, 0.55)' : 'rgba(100, 116, 139, 0.35)';
+          ctx.setLineDash([5, 8]);
+          ctx.lineDashOffset = animTimeRef.current * (s.polarity === 'NS' ? -1 : 1) * 1.5;
+          ctx.beginPath();
+          ctx.moveTo(-250, 0);
+          ctx.lineTo(250, 0);
+          ctx.stroke();
+          ctx.setLineDash([]);
+
+          // Draw the Bar Magnet block
+          const halfL = magnetLength / 2;
+          const halfH = magnetHeight / 2;
+
+          ctx.shadowColor = 'rgba(15, 23, 42, 0.15)';
+          ctx.shadowBlur = 12;
+          ctx.shadowOffsetY = 6;
+
+          // Base Magnet Body
+          ctx.fillStyle = s.polarity === 'NS' ? '#1e40af' : '#b91c1c';
+          ctx.beginPath();
+          ctx.roundRect(-halfL, -halfH, halfL, magnetHeight, [6, 0, 0, 6]);
+          ctx.fill();
+
+          ctx.fillStyle = s.polarity === 'NS' ? '#b91c1c' : '#1e40af';
+          ctx.beginPath();
+          ctx.roundRect(0, -halfH, halfL, magnetHeight, [0, 6, 6, 0]);
+          ctx.fill();
+
+          ctx.shadowColor = 'transparent';
+          ctx.shadowBlur = 0;
+          ctx.shadowOffsetY = 0;
+
+          // Magnet gloss highlight overlay
+          const gradGloss = ctx.createLinearGradient(0, -halfH, 0, halfH);
+          gradGloss.addColorStop(0, 'rgba(255, 255, 255, 0.28)');
+          gradGloss.addColorStop(0.3, 'rgba(255, 255, 255, 0.08)');
+          gradGloss.addColorStop(0.7, 'rgba(0, 0, 0, 0.05)');
+          gradGloss.addColorStop(1, 'rgba(0, 0, 0, 0.18)');
+          ctx.fillStyle = gradGloss;
+          ctx.beginPath();
+          ctx.roundRect(-halfL, -halfH, magnetLength, magnetHeight, 6);
+          ctx.fill();
+
+          // North & South lettering
+          ctx.fillStyle = '#ffffff';
+          ctx.font = 'bold 15px "Inter", sans-serif';
+          ctx.textAlign = 'center';
+          ctx.textBaseline = 'middle';
+          
+          const leftLetter = s.polarity === 'NS' ? 'S' : 'N';
+          const rightLetter = s.polarity === 'NS' ? 'N' : 'S';
+
+          ctx.fillText(leftLetter, -halfL / 2, 0);
+          ctx.fillText(rightLetter, halfL / 2, 0);
+
+          ctx.strokeStyle = 'rgba(255, 255, 255, 0.15)';
+          ctx.lineWidth = 1.5;
+          ctx.beginPath();
+          ctx.moveTo(0, -halfH);
+          ctx.lineTo(0, halfH);
+          ctx.stroke();
+
+          ctx.restore();
+
+          // 3. Draw FRONT half of the coil wire loops
+          for (let k = 0; k < loopCount; k++) {
+            const cx = startX + k * loopSpacing;
+            ctx.strokeStyle = '#d97706'; // Copper wire front (brighter)
+            ctx.lineWidth = 4;
+            ctx.beginPath();
+            ctx.ellipse(cx, coilCenterY, 20, 50, 0, (3 * Math.PI) / 2, Math.PI / 2);
+            ctx.stroke();
+
+            if (Math.abs(calculatedEmf) > 0.05) {
+              const glowIntensity = Math.min(0.9, Math.abs(calculatedEmf) / 5.5);
+              ctx.strokeStyle = calculatedEmf > 0 ? `rgba(6, 182, 212, ${glowIntensity})` : `rgba(245, 158, 11, ${glowIntensity})`;
+              ctx.lineWidth = 8;
+              ctx.beginPath();
+              ctx.ellipse(cx, coilCenterY, 20, 50, 0, (3 * Math.PI) / 2, Math.PI / 2);
+              ctx.stroke();
+              ctx.lineWidth = 4; // restore
+            }
+          }
+
+          // Draw Coil Support Holder Cylinder (transparency effect)
+          ctx.strokeStyle = theme === 'dark' ? 'rgba(148, 163, 184, 0.25)' : 'rgba(148, 163, 184, 0.18)';
+          ctx.lineWidth = 2.5;
+          ctx.fillStyle = theme === 'dark' ? 'rgba(30, 41, 59, 0.45)' : 'rgba(226, 232, 240, 0.15)';
+          ctx.beginPath();
+          ctx.roundRect(startX - 25, coilCenterY - 54, (loopCount - 1) * loopSpacing + 50, 108, 12);
+          ctx.fill();
+          ctx.stroke();
+
+          // Coil Base stand
+          ctx.fillStyle = theme === 'dark' ? '#475569' : '#64748b';
+          ctx.fillRect(coilCenterX - 12, coilCenterY + 50, 24, 25);
+          
+          ctx.fillStyle = theme === 'dark' ? '#1e293b' : '#334155';
+          ctx.beginPath();
+          ctx.roundRect(coilCenterX - 45, coilCenterY + 70, 90, 8, 4);
+          ctx.fill();
+
+          // 4. Draw Terminals & Connecting Wires to the Galvanometer
+          ctx.strokeStyle = theme === 'dark' ? '#64748b' : '#475569';
+          ctx.lineWidth = 2;
+          
+          const leftWireX = startX - 8;
+          ctx.beginPath();
+          ctx.moveTo(leftWireX, coilCenterY + 44);
+          ctx.lineTo(leftWireX, coilCenterY + 75);
+          ctx.lineTo(coilCenterX - 150, coilCenterY + 75);
+          ctx.stroke();
+
+          const rightWireX = startX + (loopCount - 1) * loopSpacing + 8;
+          ctx.beginPath();
+          ctx.moveTo(rightWireX, coilCenterY + 44);
+          ctx.lineTo(rightWireX, coilCenterY + 71);
+          ctx.lineTo(coilCenterX + 150, coilCenterY + 71);
+          ctx.stroke();
+
+          if (Math.abs(calculatedEmf) > 0.05) {
+            ctx.strokeStyle = calculatedEmf > 0 ? '#06b6d4' : '#f59e0b';
+            ctx.lineWidth = 3.5;
+            ctx.setLineDash([6, 12]);
+            const flowSign = calculatedEmf > 0 ? -1 : 1;
+            ctx.lineDashOffset = animTimeRef.current * flowSign * 2;
+
+            ctx.beginPath();
+            ctx.moveTo(leftWireX, coilCenterY + 44);
+            ctx.lineTo(leftWireX, coilCenterY + 75);
+            ctx.lineTo(coilCenterX - 150, coilCenterY + 75);
+            ctx.stroke();
+
+            ctx.beginPath();
+            ctx.moveTo(rightWireX, coilCenterY + 44);
+            ctx.lineTo(rightWireX, coilCenterY + 71);
+            ctx.lineTo(coilCenterX + 150, coilCenterY + 71);
+            ctx.stroke();
+
+            ctx.setLineDash([]);
+          }
+
+          animId = requestAnimationFrame(render);
+        };
+
+        render();
+
+        return () => {
+          cancelAnimationFrame(animId);
+        };
+      }, [setState, onUpdateEmf, theme]);
+
+      // Sync magnetY when angle or yOffset is changed but not dragging/automoving
+      useEffect(() => {
+        if (!state.isDragging && !state.isAutoMoving) {
+          const rad = (state.angle * Math.PI) / 180;
+          const targetY = coilCenterY + state.yOffset + (state.magnetX - coilCenterX) * Math.tan(rad);
+          if (Math.abs(state.magnetY - targetY) > 0.1) {
+            setState(prev => ({ ...prev, magnetY: targetY }));
+          }
+        }
+      }, [state.angle, state.yOffset, state.magnetX, state.isDragging, state.isAutoMoving, setState]);
+
+      // Handle global mouseUp / touchend
+      useEffect(() => {
+        const handleGlobalMouseUp = () => {
+          handleEnd();
+        };
+        window.addEventListener('mouseup', handleGlobalMouseUp);
+        window.addEventListener('touchend', handleGlobalMouseUp);
+        return () => {
+          window.removeEventListener('mouseup', handleGlobalMouseUp);
+          window.removeEventListener('touchend', handleGlobalMouseUp);
+        };
+      }, []);
+
+      return (
+        <div ref={containerRef} className={`relative w-full aspect-[760/170] rounded-2xl overflow-hidden shadow-inner flex flex-col items-center justify-center border transition-colors duration-300 ${
+          theme === 'dark' ? 'bg-slate-950/50 border-slate-800' : 'bg-slate-50 border-slate-100'
+        }`}>
+          <canvas
+            ref={canvasRef}
+            onMouseDown={handleStart}
+            onMouseMove={handleMove}
+            onTouchStart={handleStart}
+            onTouchMove={handleMove}
+            style={{ cursor: state.isDragging ? 'grabbing' : isHoveringMagnet ? 'grab' : 'default' }}
+            className="absolute inset-0 w-full h-full block touch-none"
+          />
+          <div className="absolute top-3 left-3 flex gap-2 pointer-events-none select-none">
+            <span className={`text-[10px] font-semibold px-2 py-1 rounded-md border shadow-sm flex items-center gap-1 transition-colors duration-300 ${
+              theme === 'dark' ? 'bg-slate-900/95 text-slate-300 border-slate-800' : 'bg-white/95 text-slate-600 border-slate-200/80'
+            }`}>
+              <span className="w-1.5 h-1.5 rounded-full bg-rose-500 animate-pulse" />
+              실험실 활성화됨
+            </span>
+            <span className={`text-[10px] font-semibold px-2 py-1 rounded-md border shadow-sm transition-colors duration-300 ${
+              theme === 'dark' ? 'bg-slate-900/95 text-slate-400 border-slate-800' : 'bg-white/95 text-slate-500 border-slate-200/80'
+            }`}>
+              {state.isAutoMoving ? '자동 왕복 운동 중' : '자석을 드래그하세요'}
+            </span>
+          </div>
+        </div>
+      );
+    }
+
+    // --- GALVANOMETER ---
+    function Galvanometer({ value, theme }) {
+      const maxVal = 320;
+      const deflectionAngle = Math.max(-1, Math.min(1, value / maxVal)) * 65;
+
+      return (
+        <div className={`flex flex-col items-center p-2.5 rounded-xl border transition-colors duration-300 w-full ${
+          theme === 'dark' ? 'bg-slate-900 border-slate-800 shadow-none' : 'bg-white border-slate-100 shadow-sm'
+        }`}>
+          <div className="w-full flex items-center justify-between pb-1 mb-2 border-b transition-colors duration-300 border-slate-100 dark:border-slate-800">
+            <span className="text-[10px] font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wide">검류계 (Galvanometer)</span>
+            <span className="text-[9px] font-mono font-bold bg-indigo-50 text-indigo-700 dark:bg-indigo-950/40 dark:text-indigo-400 px-1.5 py-0.5 rounded">G-Meter</span>
+          </div>
+
+          <div className="relative w-[130px] h-[78px] flex items-end justify-center overflow-hidden">
+            <svg className="absolute bottom-0 w-[130px] h-[65px]" viewBox="0 0 100 50">
+              <path d="M 5,50 A 45,45 0 0,1 95,50" fill="none" stroke={theme === 'dark' ? '#334155' : '#e2e8f0'} strokeWidth="1.5" />
+              <path d="M 15,50 A 35,35 0 0,1 85,50" fill="none" stroke={theme === 'dark' ? '#1e293b' : '#f8fafc'} strokeWidth="4" />
+              
+              <line x1="50" y1="5" x2="50" y2="9" stroke={theme === 'dark' ? '#fb7185' : '#e11d48'} strokeWidth="1.2" />
+              <line x1="10" y1="50" x2="14" y2="50" stroke={theme === 'dark' ? '#64748b' : '#94a3b8'} strokeWidth="1" />
+              <line x1="90" y1="50" x2="86" y2="50" stroke={theme === 'dark' ? '#64748b' : '#94a3b8'} strokeWidth="1" />
+              <line x1="22.5" y1="22.5" x2="25.5" y2="25.5" stroke={theme === 'dark' ? '#64748b' : '#94a3b8'} strokeWidth="1" />
+              <line x1="77.5" y1="22.5" x2="74.5" y2="25.5" stroke={theme === 'dark' ? '#64748b' : '#94a3b8'} strokeWidth="1" />
+
+              <text x="50" y="16" fontSize="5.5" fontWeight="bold" textAnchor="middle" fill={theme === 'dark' ? '#94a3b8' : '#475569'}>0</text>
+              <text x="18" y="47" fontSize="5" fontWeight="bold" fill="#3b82f6">-</text>
+              <text x="82" y="47" fontSize="5" fontWeight="bold" fill="#ef4444">+</text>
+            </svg>
+
+            <div style={{ transform: `rotate(${deflectionAngle}deg)` }} className="absolute bottom-0 left-[64.25px] w-[1.5px] h-[55px] bg-red-500 origin-bottom rounded-full transition-transform duration-75">
+              <div className="absolute top-0 -left-[1.25px] w-[4px] h-[4px] bg-red-600 rounded-full" />
+            </div>
+
+            <div className="absolute -bottom-1.5 left-[58px] w-3 h-3 rounded-full border border-slate-300 dark:border-slate-700 bg-slate-100 dark:bg-slate-800 flex items-center justify-center shadow-sm">
+              <div className="w-1 h-1 rounded-full bg-slate-500 dark:bg-slate-400" />
+            </div>
+          </div>
+
+          <div className={`mt-1.5 px-3 py-1.5 border rounded-lg flex flex-col items-center justify-center w-full min-w-[120px] transition-colors duration-300 ${
+            theme === 'dark' ? 'bg-slate-950 border-slate-800' : 'bg-slate-50 border-slate-100'
+          }`}>
+            <span className={`text-[10px] font-mono font-semibold transition-colors duration-300 ${theme === 'dark' ? 'text-slate-500' : 'text-slate-400'}`}>CURRENT 유도 전류</span>
+            <div className="flex items-baseline gap-0.5">
+              <span className={`text-sm font-bold font-mono transition-colors duration-300 ${Math.abs(value) > 2 ? 'text-cyan-500' : theme === 'dark' ? 'text-slate-400' : 'text-slate-700'}`}>
+                {value > 0 ? '+' : ''}{value.toFixed(1)}
+              </span>
+              <span className={`text-[10px] font-bold font-mono transition-colors duration-300 ${theme === 'dark' ? 'text-slate-600' : 'text-slate-400'}`}>mA</span>
+            </div>
+          </div>
+        </div>
+      );
+    }
+
+    // --- EMF GRAPH (WAVEFORM) ---
+    function EmfGraph({ data, theme }) {
+      const width = 300;
+      const height = 98;
+      const maxDataPoints = 60;
+
+      const pathData = useMemo(() => {
+        if (data.length < 2) return '';
+        const points = data.slice(-maxDataPoints);
+        const stepX = width / (maxDataPoints - 1);
+        
+        return points.map((val, index) => {
+          const x = index * stepX;
+          const y = (height / 2) - (val / 320) * (height / 2 - 5);
+          const clampedY = Math.max(3, Math.min(height - 3, y));
+          return `${index === 0 ? 'M' : 'L'} ${x} ${clampedY}`;
+        }).join(' ');
+      }, [data]);
+
+      return (
+        <div className={`p-2.5 rounded-xl border flex flex-col h-full transition-colors duration-300 ${
+          theme === 'dark' ? 'bg-slate-900 border-slate-800 shadow-none' : 'bg-white border-slate-100 shadow-sm'
+        }`}>
+          <div className="flex items-center justify-between pb-1 mb-2 border-b transition-colors duration-300 border-slate-100 dark:border-slate-800">
+            <span className="text-[10px] font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wide">실시간 유도기전력 (EMF)</span>
+            <span className="text-[9px] font-mono font-bold bg-rose-50 text-rose-700 dark:bg-rose-950/40 dark:text-rose-400 px-1.5 py-0.5 rounded">V(t) Graph</span>
+          </div>
+
+          <div className="relative flex-grow flex items-center justify-center bg-slate-50 dark:bg-slate-950 rounded-lg overflow-hidden border border-slate-100 dark:border-slate-800 p-1">
+            <svg viewBox={`0 0 ${width} ${height}`} className="w-full h-full overflow-visible">
+              <line x1="0" y1={height / 2} x2={width} y2={height / 2} stroke={theme === 'dark' ? 'rgba(51, 65, 85, 0.6)' : 'rgba(203, 213, 225, 0.6)'} strokeWidth="1.2" strokeDasharray="4 4" />
+              {[1, 2, 3].map(i => (
+                <line key={i} x1={(width / 4) * i} y1="0" x2={(width / 4) * i} y2={height} stroke={theme === 'dark' ? 'rgba(51, 65, 85, 0.3)' : 'rgba(203, 213, 225, 0.3)'} strokeWidth="1" strokeDasharray="2 3" />
+              ))}
+              <text x="3" y="10" fontSize="5" fontWeight="semibold" fill="#ef4444" opacity="0.8">Max (+V)</text>
+              <text x="3" y={height / 2 + 1.8} fontSize="4.5" fill={theme === 'dark' ? '#475569' : '#94a3b8'}>0</text>
+              <text x="3" y={height - 5} fontSize="5" fontWeight="semibold" fill="#3b82f6" opacity="0.8">Min (-V)</text>
+
+              {pathData && (
+                <path d={pathData} fill="none" stroke={theme === 'dark' ? '#fb7185' : '#e11d48'} strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" />
+              )}
+            </svg>
+          </div>
+        </div>
+      );
+    }
+
+    // --- THEORY PANEL ---
+    function LearningPanel({ theme }) {
+      const [expandedId, setExpandedId] = useState('static');
+
+      return (
+        <div className={`p-3 rounded-xl border transition-colors duration-300 flex flex-col h-full ${
+          theme === 'dark' ? 'bg-slate-900 border-slate-800 shadow-none' : 'bg-white border-slate-100 shadow-sm'
+        }`}>
+          <div className="flex items-center gap-2 pb-1.5 mb-2 border-b transition-colors duration-300 border-slate-100 dark:border-slate-800">
+            <div className={`p-1 rounded-lg transition-colors duration-300 ${theme === 'dark' ? 'bg-indigo-950 text-indigo-400' : 'bg-indigo-50 text-indigo-700'}`}>
+              <IconBookOpen />
+            </div>
+            <div>
+              <h2 className="text-xs font-bold text-slate-800 dark:text-slate-200">물리 탐구 가이드</h2>
+              <p className="text-[9px] text-slate-400 dark:text-slate-500">2015 개정 교육과정 물리학Ⅰ</p>
+            </div>
+          </div>
+
+          <div className={`p-2 rounded-lg mb-2 border transition-colors duration-300 ${
+            theme === 'dark' ? 'bg-gradient-to-r from-slate-950 to-indigo-950/20 border-slate-800' : 'bg-gradient-to-r from-slate-50 to-indigo-50/20 border-slate-100/60'
+          }`}>
+            <div className={`flex items-center gap-1 text-[10px] font-bold mb-0.5 ${
+              theme === 'dark' ? 'text-indigo-400' : 'text-indigo-700'
+            }`}>
+              <span className="text-amber-500">✨</span>
+              핵심 이론 한 눈에 보기
+            </div>
+            <p className={`text-[10px] leading-relaxed ${
+              theme === 'dark' ? 'text-slate-400' : 'text-slate-600'
+            }`}>
+              <strong>패러데이 법칙:</strong> 유도기전력(V)은 코일 감은 수(N)와 시간당 자속 변화율(dΦ/dt)에 비례합니다.{' '}
+              <span className={`font-mono font-semibold px-1 py-0.5 rounded border ${
+                theme === 'dark' ? 'bg-slate-900 border-slate-800 text-indigo-300' : 'bg-white border-slate-200'
+              }`}>V = -N · ΔΦ/Δt</span>
+            </p>
+          </div>
+
+          <div className="flex-grow space-y-1.5 overflow-y-auto max-h-[210px] pr-1">
+            <span className={`text-[9px] font-mono font-semibold uppercase tracking-wider block mb-0.5 ${
+              theme === 'dark' ? 'text-slate-500' : 'text-slate-400'
+            }`}>
+              탐구 질문 & 스스로 생각해보기
+            </span>
+            {REFLECTIVE_QUESTIONS.map(item => {
+              const isExpanded = expandedId === item.id;
+              return (
+                <div key={item.id} className={`rounded-lg border transition-all duration-200 ${
+                  isExpanded 
+                    ? theme === 'dark'
+                      ? 'border-indigo-900 bg-indigo-950/10 shadow-sm'
+                      : 'border-indigo-100 bg-indigo-50/10 shadow-sm'
+                    : theme === 'dark'
+                      ? 'border-slate-800 hover:border-slate-700 hover:bg-slate-800/30'
+                      : 'border-slate-100 hover:border-slate-200 hover:bg-slate-50/50'
+                }`}>
+                  <button onClick={() => setExpandedId(isExpanded ? null : item.id)} className="w-full text-left p-2 flex items-start gap-2">
+                    <div className={`mt-0.5 p-1 rounded-md ${
+                      isExpanded 
+                        ? theme === 'dark' ? 'bg-indigo-950 text-indigo-400' : 'bg-indigo-100/50 text-indigo-600'
+                        : theme === 'dark' ? 'bg-slate-950 text-slate-500' : 'bg-slate-50 text-slate-400'
+                    }`}><IconHelpCircle /></div>
+                    <div className="flex-grow">
+                      <span className="text-[9px] font-mono font-bold text-indigo-500 block mb-0.5 uppercase tracking-wide">{item.concept}</span>
+                      <h3 className={`text-[11px] font-semibold leading-tight ${
+                        theme === 'dark' ? 'text-slate-300' : 'text-slate-700'
+                      }`}>{item.question}</h3>
+                    </div>
+                  </button>
+                  {isExpanded && (
+                    <div className={`px-2 pb-2 pt-0 ml-6 text-[10px] leading-relaxed border-t mt-0.5 ${
+                      theme === 'dark' ? 'text-slate-400 border-slate-800/60' : 'text-slate-600 border-slate-100/60'
+                    }`}>
+                      <div className={`mt-1 p-2 rounded-md border ${
+                        theme === 'dark' ? 'bg-slate-950 border-slate-800 text-slate-300' : 'bg-white border-slate-100 text-slate-700'
+                      } whitespace-pre-line`}>
+                        {item.hint}
+                      </div>
+                    </div>
+                  )}
+                </div>
+              );
+            })}
+          </div>
+
+          <div className={`mt-2 pt-1.5 border-t text-center ${
+            theme === 'dark' ? 'border-slate-800' : 'border-slate-100'
+          }`}>
+            <span className={`text-[9px] font-medium ${
+              theme === 'dark' ? 'text-slate-500' : 'text-slate-400'
+            }`}>
+              💡 자석을 움직이며 검류계와 그래프의 반응을 실시간으로 관찰하세요.
+            </span>
+          </div>
+        </div>
+      );
+    }
+
+    // --- MISSION SYSTEM ---
+    function MissionPanel({ magnetX, velocity, emf, isAuto, turns, polarity, isDragging, theme }) {
+      const [xp, setXp] = useState(() => {
+        const saved = localStorage.getItem('faraday_xp');
+        return saved ? parseInt(saved, 10) : 0;
+      });
+
+      const [completedList, setCompletedList] = useState(() => {
+        const saved = localStorage.getItem('faraday_completed_missions');
+        return saved ? JSON.parse(saved) : [];
+      });
+
+      const [stillDuration, setStillDuration] = useState(0);
+      const [autoDuration, setAutoDuration] = useState(0);
+
+      const missions = [
+        {
+          id: 'mission_static_equilibrium',
+          title: '정적 평형 상태 관찰 (자속 변화의 이해)',
+          description: '자석을 코일 중심부(X좌표 430~530px)에 완전히 정지시켜 1.5초간 유지하세요.',
+          conditionText: '코일 중앙에 위치 + 속도 0 + 1.5초 유지',
+          rewardXp: 150,
+          progress: Math.min(100, Math.round((stillDuration / 90) * 100)),
+          checkFn: (sDur) => sDur >= 90,
+        },
+        {
+          id: 'mission_lenz_reverse',
+          title: '렌츠의 법칙 역방향 탐구',
+          description: '자석 극성을 [반전형 N-S]로 설정하고 자석을 격렬하게 움직여 바늘을 왼쪽(-)으로 꺾어보세요.',
+          conditionText: 'N-S 반전 극성 + 유도 기전력 -1.5V 이하 발생',
+          rewardXp: 100,
+          progress: polarity === 'SN' && emf < 0 ? Math.min(100, Math.round((Math.abs(emf) / 1.5) * 100)) : (polarity === 'SN' ? 30 : 0),
+          checkFn: () => polarity === 'SN' && emf < -1.5,
+        },
+        {
+          id: 'mission_max_emf',
+          title: '최대 유도기전력 달성 (패러데이 증명)',
+          description: '코일 감은 수(N)를 5회(최대)로 설정하고, 자석을 매우 빠르게 흔들어 2.5V 이상의 기전력을 유도하세요.',
+          conditionText: '감은 수 5N + 유도 기전력 ±2.5V 이상 달성',
+          rewardXp: 200,
+          progress: turns === 5 ? Math.min(100, Math.round((Math.abs(emf) / 2.5) * 100)) : 10,
+          checkFn: () => turns === 5 && Math.abs(emf) >= 2.5,
+        },
+        {
+          id: 'mission_ac_generation',
+          title: '지속 가능한 교류(AC) 전력 생성',
+          description: '자석 자동 왕복 운동 스위치를 켜서 안정적인 교류 사인파 그래프를 3초간 지속해서 관찰해보세요.',
+          conditionText: '자동 왕복 운동 활성화 + 3초간 관찰',
+          rewardXp: 120,
+          progress: Math.min(100, Math.round((autoDuration / 180) * 100)),
+          checkFn: (aDur) => aDur >= 180,
+        },
+      ];
+
+      useEffect(() => {
+        const isStill = 
+          !isAuto && 
+          !isDragging && 
+          magnetX >= 430 && 
+          magnetX <= 530 && 
+          Math.abs(velocity) < 0.5 && 
+          Math.abs(emf) < 0.05;
+
+        if (isStill) {
+          setStillDuration(p => p + 1);
+        } else {
+          setStillDuration(0);
+        }
+
+        if (isAuto) {
+          setAutoDuration(p => p + 1);
+        } else {
+          setAutoDuration(0);
+        }
+      }, [magnetX, velocity, emf, isAuto, isDragging]);
+
+      useEffect(() => {
+        missions.forEach(mission => {
+          if (completedList.includes(mission.id)) return;
+
+          const durationArg = mission.id === 'mission_static_equilibrium' ? stillDuration : (mission.id === 'mission_ac_generation' ? autoDuration : 0);
+          const isCompletedNow = mission.checkFn(durationArg);
+
+          if (isCompletedNow) {
+            const updatedList = [...completedList, mission.id];
+            const updatedXp = xp + mission.rewardXp;
+            
+            setCompletedList(updatedList);
+            setXp(updatedXp);
+            
+            localStorage.setItem('faraday_completed_missions', JSON.stringify(updatedList));
+            localStorage.setItem('faraday_xp', updatedXp.toString());
+          }
+        });
+      }, [magnetX, velocity, emf, isAuto, turns, polarity, isDragging, stillDuration, autoDuration, completedList, xp]);
+
+      const getRank = (score) => {
+        if (score >= 500) return { name: '전자기학 마스터 (Master)', color: 'text-amber-500 border-amber-500/20 bg-amber-500/10' };
+        if (score >= 300) return { name: '고급 수석 연구원 (Senior)', color: 'text-purple-500 border-purple-500/20 bg-purple-500/10' };
+        if (score >= 150) return { name: '학부생 물리 연구원 (Scholar)', color: 'text-indigo-500 border-indigo-500/20 bg-indigo-500/10' };
+        return { name: '초급 물리학 학도 (Novice)', color: 'text-slate-500 border-slate-500/20 bg-slate-500/10' };
+      };
+
+      const currentRank = getRank(xp);
+
+      const resetProgress = () => {
+        if (confirm('모든 도전 과제 성과와 XP 점수를 초기화하시겠습니까?')) {
+          setXp(0);
+          setCompletedList([]);
+          setStillDuration(0);
+          setAutoDuration(0);
+          localStorage.removeItem('faraday_xp');
+          localStorage.removeItem('faraday_completed_missions');
+        }
+      };
+
+      return (
+        <div className={`p-3 rounded-xl border transition-colors duration-300 flex flex-col ${
+          theme === 'dark' ? 'bg-slate-900 border-slate-800' : 'bg-white border-slate-100 shadow-sm'
+        }`}>
+          <div className="flex items-center justify-between pb-2 mb-2.5 border-b border-slate-100 dark:border-slate-800">
+            <div className="flex items-center gap-1.5">
+              <IconTrophy />
+              <h3 className="text-xs font-bold text-slate-800 dark:text-slate-200">🧪 실시간 도전 과제 & 보상</h3>
+            </div>
+            <div className="flex items-center gap-1.5">
+              <button 
+                onClick={resetProgress}
+                title="업적 초기화"
+                className="p-1 rounded hover:bg-slate-100 dark:hover:bg-slate-800 text-slate-400 hover:text-slate-600 transition-colors"
+              >
+                <IconRotateCcw />
+              </button>
+              <span className="text-[10px] font-bold px-2 py-0.5 rounded-full bg-emerald-500/10 text-emerald-500 border border-emerald-500/20 font-mono">
+                Score: {xp} XP
+              </span>
+            </div>
+          </div>
+
+          <div className={`flex items-center justify-between px-2.5 py-1.5 rounded-lg border text-[10.5px] font-bold mb-3 ${currentRank.color}`}>
+            <span className="flex items-center gap-1.5">
+              <IconAward />
+              현재 물리 등급
+            </span>
+            <span>{currentRank.name}</span>
+          </div>
+
+          <div className="space-y-2 max-h-[240px] overflow-y-auto pr-1">
+            {missions.map(m => {
+              const isCompleted = completedList.includes(m.id);
+              return (
+                <div 
+                  key={m.id} 
+                  className={`p-2 rounded-lg border flex flex-col gap-1.5 transition-all ${
+                    isCompleted 
+                      ? 'bg-emerald-500/5 border-emerald-500/20' 
+                      : 'bg-slate-50 dark:bg-slate-950 border-slate-100 dark:border-slate-800'
+                  }`}
+                >
+                  <div className="flex items-start justify-between gap-2">
+                    <div className="flex items-start gap-2">
+                      <div className="mt-0.5 shrink-0">
+                        {isCompleted ? (
+                          <IconCheckCircle />
+                        ) : (
+                          <span className="block w-3.5 h-3.5 rounded-full border-2 border-slate-300 dark:border-slate-700 shrink-0" />
+                        )}
+                      </div>
+                      <div>
+                        <h4 className={`text-[10.5px] font-bold leading-tight ${
+                          isCompleted ? 'text-slate-400 line-through dark:text-slate-500' : 'text-slate-700 dark:text-slate-300'
+                        }`}>
+                          {m.title}
+                        </h4>
+                        <p className="text-[9.5px] text-slate-400 dark:text-slate-500 leading-snug mt-0.5">
+                          {m.description}
+                        </p>
+                      </div>
+                    </div>
+                    <div className="shrink-0 text-right">
+                      <span className={`text-[9px] font-bold px-1.5 py-0.5 rounded ${
+                        isCompleted 
+                          ? 'bg-slate-100 text-slate-400 dark:bg-slate-900' 
+                          : 'bg-indigo-50 text-indigo-600 dark:bg-indigo-950/40 dark:text-indigo-400'
+                      }`}>
+                        +{m.rewardXp} XP
+                      </span>
+                    </div>
+                  </div>
+
+                  {!isCompleted && (
+                    <div className="mt-0.5 space-y-1">
+                      <div className="w-full bg-slate-200 dark:bg-slate-800 h-1 rounded-full overflow-hidden">
+                        <div 
+                          className="bg-indigo-500 h-1 rounded-full transition-all duration-300"
+                          style={{ width: `${m.progress}%` }}
+                        />
+                      </div>
+                      <div className="flex justify-between items-center text-[8.5px] text-slate-400 dark:text-slate-500">
+                        <span className="flex items-center gap-0.5">
+                          <IconHelpCircle />
+                          조건: {m.conditionText}
+                        </span>
+                        <span className="font-mono font-bold">{m.progress}%</span>
+                      </div>
+                    </div>
+                  )}
+
+                  {isCompleted && (
+                    <div className="flex items-center gap-1 text-[8.5px] text-emerald-600 dark:text-emerald-500 font-semibold animate-pulse">
+                      <IconZap />
+                      미션 완료! 보상 XP 획득 성공
+                    </div>
+                  )}
+                </div>
+              );
+            })}
+          </div>
+        </div>
+      );
+    }
+
+    // --- MAIN APP ---
+    function App() {
+      const [theme, setTheme] = useState('dark');
+      const [simState, setSimState] = useState({
+        magnetX: 200,
+        magnetY: 85,
+        velocity: 0,
+        isDragging: false,
+        isAutoMoving: false,
+        polarity: 'NS',
+        turns: 2,
+        windingDirection: 'CW',
+        angle: 0,
+        magnetStrength: 2,
+        yOffset: 0,
+      });
+
+      const [currentEmf, setCurrentEmf] = useState(0);
+      const [emfHistory, setEmfHistory] = useState(() => Array(60).fill(0));
+
+      const handleUpdateEmf = useCallback((val) => {
+        setCurrentEmf(val);
+        setEmfHistory(prev => [...prev.slice(1), val]);
+      }, []);
+
+      const handleReset = () => {
+        setSimState({
+          magnetX: 200,
+          magnetY: 85,
+          velocity: 0,
+          isDragging: false,
+          isAutoMoving: false,
+          polarity: 'NS',
+          turns: 2,
+          windingDirection: 'CW',
+          angle: 0,
+          magnetStrength: 2,
+          yOffset: 0,
+        });
+        setEmfHistory(Array(60).fill(0));
+        setCurrentEmf(0);
+      };
+
+      useEffect(() => {
+        const cl = document.documentElement.classList;
+        if (theme === 'dark') {
+          cl.add('dark');
+          document.body.style.backgroundColor = '#020617';
+        } else {
+          cl.remove('dark');
+          document.body.style.backgroundColor = '#fafafa';
+        }
+      }, [theme]);
+
+      return (
+        <div className={`min-h-screen py-3 px-3 sm:px-6 font-sans transition-colors duration-300 ${
+          theme === 'dark' ? 'bg-slate-950 text-slate-100' : 'bg-slate-50/50 text-slate-900'
+        }`}>
+          <div className="max-w-7xl mx-auto flex flex-col gap-3">
+            <header className="flex flex-col sm:flex-row sm:items-center sm:justify-between pb-2 border-b gap-2 border-slate-200 dark:border-slate-800">
+              <div className="flex items-center gap-2">
+                <div className="p-1.5 rounded-xl bg-indigo-600 text-white shadow-md animate-pulse">
+                  <IconZap />
+                </div>
+                <div>
+                  <h1 className="text-sm font-black tracking-tight flex items-center gap-1">
+                    패러데이 전자기 유도 가상 실험실
+                    <span className="text-[9px] font-bold bg-indigo-500/10 text-indigo-400 px-1.5 py-0.5 rounded border border-indigo-500/20">물리학 Ⅰ</span>
+                  </h1>
+                  <p className="text-[10px] text-slate-400 dark:text-slate-500">실시간 패러데이 법칙 및 렌츠의 법칙 탐구</p>
+                </div>
+              </div>
+              <div className="flex items-center gap-1.5 self-end sm:self-auto">
+                <button onClick={handleReset} className="px-2.5 py-1 text-[10px] font-semibold border rounded-lg transition-colors flex items-center gap-1 bg-white text-slate-700 border-slate-200 hover:bg-slate-50 dark:bg-slate-900 dark:border-slate-800 dark:text-slate-300 dark:hover:bg-slate-800">
+                  <IconRotateCcw />초기화
+                </button>
+                <button onClick={() => setTheme(prev => prev === 'dark' ? 'light' : 'dark')} className="p-1.5 border rounded-lg bg-white dark:bg-slate-900 border-slate-200 dark:border-slate-800">
+                  {theme === 'dark' ? <IconSun /> : <IconMoon />}
+                </button>
+              </div>
+            </header>
+
+            <div className="grid grid-cols-1 lg:grid-cols-12 gap-3 items-start">
+              <main className="lg:col-span-8 flex flex-col gap-3">
+                <PhysicsCanvas state={simState} setState={setSimState} theme={theme} onUpdateEmf={handleUpdateEmf} />
+                <div className="grid grid-cols-1 md:grid-cols-12 gap-3">
+                  <div className="md:col-span-5"><Galvanometer value={currentEmf * 40} theme={theme} /></div>
+                  <div className="md:col-span-7"><EmfGraph data={emfHistory} theme={theme} /></div>
+                </div>
+              </main>
+
+              <aside className="lg:col-span-4 flex flex-col gap-3">
+                {/* Control Panel */}
+                <div className={`p-3 rounded-xl border transition-colors duration-300 ${theme === 'dark' ? 'bg-slate-900 border-slate-800' : 'bg-white border-slate-100 shadow-sm'}`}>
+                  <h2 className="text-xs font-bold pb-2 border-b border-slate-100 dark:border-slate-800 mb-2">실험 제어 및 변인 설정</h2>
+                  
+                  <div className="space-y-3">
+                    <div className="flex items-center justify-between p-1.5 bg-indigo-500/5 rounded-lg border border-indigo-500/15">
+                      <div>
+                        <span className="text-[10.5px] font-bold block">자석 자동 왕복 운동</span>
+                        <span className="text-[9px] text-slate-400">일정한 속도의 왕복 주기 운동</span>
+                      </div>
+                      <button onClick={() => setSimState(prev => ({ ...prev, isAutoMoving: !prev.isAutoMoving }))} className={`w-8 h-4 rounded-full p-0.5 transition-colors ${simState.isAutoMoving ? 'bg-indigo-600' : 'bg-slate-300 dark:bg-slate-700'}`}>
+                        <div className={`w-3 h-3 rounded-full bg-white transition-transform ${simState.isAutoMoving ? 'translate-x-4' : 'translate-x-0'}`} />
+                      </button>
+                    </div>
+
+                    <div>
+                      <span className="text-[10px] font-semibold text-slate-400 block mb-1">자석 극성</span>
+                      <div className="grid grid-cols-2 gap-1.5">
+                        <button onClick={() => setSimState(prev => ({ ...prev, polarity: 'NS' }))} className={`py-1 text-[10px] font-bold rounded-lg border ${simState.polarity === 'NS' ? 'bg-indigo-600 border-indigo-600 text-white' : 'border-slate-200 dark:border-slate-800'}`}>S - N [정극]</button>
+                        <button onClick={() => setSimState(prev => ({ ...prev, polarity: 'SN' }))} className={`py-1 text-[10px] font-bold rounded-lg border ${simState.polarity === 'SN' ? 'bg-indigo-600 border-indigo-600 text-white' : 'border-slate-200 dark:border-slate-800'}`}>N - S [역극]</button>
+                      </div>
+                    </div>
+
+                    <div>
+                      <span className="text-[10px] font-semibold text-slate-400 block mb-1">코일 감은 수 (Turns)</span>
+                      <div className="grid grid-cols-5 gap-1">
+                        {[1, 2, 3, 4, 5].map(t => (
+                          <button key={t} onClick={() => setSimState(prev => ({ ...prev, turns: t }))} className={`py-1 text-[10px] font-bold rounded-lg border ${simState.turns === t ? 'bg-indigo-600 border-indigo-600 text-white' : 'border-slate-200 dark:border-slate-800'}`}>{t}N</button>
+                        ))}
+                      </div>
+                    </div>
+
+                    <div>
+                      <span className="text-[10px] font-semibold text-slate-400 block mb-1">코일 감는 방향</span>
+                      <div className="grid grid-cols-2 gap-1.5">
+                        <button onClick={() => setSimState(prev => ({ ...prev, windingDirection: 'CW' }))} className={`py-1 text-[10px] font-bold rounded-lg border ${simState.windingDirection === 'CW' ? 'bg-indigo-600 border-indigo-600 text-white' : 'border-slate-200 dark:border-slate-800'}`}>우선회 (CW)</button>
+                        <button onClick={() => setSimState(prev => ({ ...prev, windingDirection: 'CCW' }))} className={`py-1 text-[10px] font-bold rounded-lg border ${simState.windingDirection === 'CCW' ? 'bg-indigo-600 border-indigo-600 text-white' : 'border-slate-200 dark:border-slate-800'}`}>좌선회 (CCW)</button>
+                      </div>
+                    </div>
+
+                    {/* 진입 각도 조절 */}
+                    <div>
+                      <div className="flex justify-between items-center mb-1">
+                        <span className="text-[10px] font-semibold text-slate-400">진입 각도 (θ)</span>
+                        <span className="text-[10px] font-bold text-emerald-500 font-mono">{simState.angle}°</span>
+                      </div>
+                      <input
+                        type="range"
+                        min="0"
+                        max="90"
+                        step="15"
+                        value={simState.angle}
+                        disabled={simState.isAutoMoving}
+                        onChange={(e) => setSimState(prev => ({ ...prev, angle: parseInt(e.target.value, 10) }))}
+                        className="w-full h-1 bg-slate-200 dark:bg-slate-800 rounded-lg appearance-none cursor-pointer accent-emerald-500 disabled:opacity-50"
+                      />
+                      <div className="flex justify-between text-[8px] text-slate-400 dark:text-slate-500 mt-0.5 font-mono">
+                        <span>0° (수직)</span>
+                        <span>45°</span>
+                        <span>90° (수평차단)</span>
+                      </div>
+                    </div>
+
+                    {/* 자석 세기 조절 */}
+                    <div>
+                      <div className="flex justify-between items-center mb-1">
+                        <span className="text-[10px] font-semibold text-slate-400">자석 세기 (B)</span>
+                        <span className="text-[10px] font-bold text-rose-500 font-mono">
+                          {simState.magnetStrength === 1 ? '약함' : simState.magnetStrength === 3 ? '강함' : '보통'}
+                        </span>
+                      </div>
+                      <input
+                        type="range"
+                        min="1"
+                        max="3"
+                        step="1"
+                        value={simState.magnetStrength}
+                        disabled={simState.isAutoMoving}
+                        onChange={(e) => setSimState(prev => ({ ...prev, magnetStrength: parseInt(e.target.value, 10) }))}
+                        className="w-full h-1 bg-slate-200 dark:bg-slate-800 rounded-lg appearance-none cursor-pointer accent-rose-500 disabled:opacity-50"
+                      />
+                      <div className="flex justify-between text-[8px] text-slate-400 dark:text-slate-500 mt-0.5 font-mono">
+                        <span>1단계 (약)</span>
+                        <span>2단계 (중)</span>
+                        <span>3단계 (강)</span>
+                      </div>
+                    </div>
+
+                    {/* 진입 높이 오프셋 조절 */}
+                    <div>
+                      <div className="flex justify-between items-center mb-1">
+                        <span className="text-[10px] font-semibold text-slate-400">진입 높이 오프셋 (Y-Offset)</span>
+                        <span className="text-[10px] font-bold text-amber-500 font-mono">
+                          {simState.yOffset === 0 ? '0px' : `${simState.yOffset > 0 ? '+' : ''}${simState.yOffset}px`}
+                        </span>
+                      </div>
+                      <input
+                        type="range"
+                        min="-40"
+                        max="40"
+                        step="10"
+                        value={simState.yOffset}
+                        disabled={simState.isAutoMoving}
+                        onChange={(e) => setSimState(prev => ({ ...prev, yOffset: parseInt(e.target.value, 10) }))}
+                        className="w-full h-1 bg-slate-200 dark:bg-slate-800 rounded-lg appearance-none cursor-pointer accent-amber-500 disabled:opacity-50"
+                      />
+                      <div className="flex justify-between text-[8px] text-slate-400 dark:text-slate-500 mt-0.5 font-mono">
+                        <span>-40px (위)</span>
+                        <span>0px (중앙)</span>
+                        <span>+40px (아래)</span>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+
+                <MissionPanel magnetX={simState.magnetX} velocity={simState.velocity} emf={currentEmf} isAuto={simState.isAutoMoving} turns={simState.turns} polarity={simState.polarity} isDragging={simState.isDragging} theme={theme} />
+                <LearningPanel theme={theme} />
+              </aside>
+            </div>
+          </div>
+        </div>
+      );
+    }
+
+    ReactDOM.createRoot(document.getElementById('root')).render(<App />);
+  </script>
+</body>
+</html>
